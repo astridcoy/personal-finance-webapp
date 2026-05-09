@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pyodbc
+import bcrypt
 
 app = Flask(__name__)
 CORS(app)
@@ -207,7 +208,74 @@ def obtener_categorias():
             "error": str(e)
         }), 500
     
+# ── POST /registro ────────────────────────────────────────────────────────────
+@app.route("/registro", methods=["POST"])
+def registro():
+    try:
+        data     = request.get_json()
+        username = data.get("username", "").strip()
+        password = data.get("password", "")
+
+        if not username or not password:
+            return jsonify({"ok": False, "error": "Usuario y contraseña requeridos"}), 400
+
+        # Encriptar contraseña
+        password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+        cn     = conectar_sql()
+        cursor = cn.cursor()
+        cursor.execute(
+            "INSERT INTO usuarios (username, password_hash) VALUES (?, ?)",
+            username, password_hash
+        )
+        cn.commit()
+        cursor.close()
+        cn.close()
+
+        return jsonify({"ok": True, "mensaje": "Usuario creado correctamente"})
+
+    except Exception as e:
+        if "UNIQUE" in str(e) or "unique" in str(e):
+            return jsonify({"ok": False, "error": "Ese usuario ya existe"}), 409
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ── POST /login ───────────────────────────────────────────────────────────────
+@app.route("/login", methods=["POST"])
+def login():
+    try:
+        data     = request.get_json()
+        username = data.get("usuario", "").strip()
+        password = data.get("password", "")
+
+        if not username or not password:
+            return jsonify({"ok": False, "error": "Usuario y contraseña requeridos"}), 400
+
+        cn     = conectar_sql()
+        cursor = cn.cursor()
+        cursor.execute(
+            "SELECT password_hash FROM usuarios WHERE username = ?", username
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        cn.close()
+
+        if not row:
+            return jsonify({"ok": False, "error": "Usuario o contraseña incorrectos"}), 401
+
+        password_hash = row[0].encode("utf-8")
+        password_ok   = bcrypt.checkpw(password.encode("utf-8"), password_hash)
+
+        if password_ok:
+            return jsonify({"ok": True, "token": "mi-token-secreto-123"})
+        else:
+            return jsonify({"ok": False, "error": "Usuario o contraseña incorrectos"}), 401
+
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
     
+    
+
 # ── INICIO ────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     app.run(port=5000, debug=True)

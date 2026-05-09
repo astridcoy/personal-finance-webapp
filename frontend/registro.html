@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro · Finanzas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'DM Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #F5E9E7, #ECC5C6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 28px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    .login-titulo {
+      font-family: 'Merriweather', serif;
+      color: #837D68;
+      font-size: 28px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .login-subtitulo {
+      text-align: center;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #837D68;
+      margin-bottom: 2px;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid #C1C0C2;
+      background: #F5E9E7;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      transition: 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #8A9DB1;
+      box-shadow: 0 0 0 4px rgba(138,157,177,0.2);
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 18px;
+      background: #8A9DB1;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 4px;
+    }
+
+    button:hover {
+      background: #837D68;
+      transform: translateY(-2px);
+    }
+
+    .login-link {
+      text-align: center;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .login-link a {
+      color: #8A9DB1;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link a:hover { text-decoration: underline; }
+
+    #errorRegistro {
+      color: #D46A6A;
+      font-size: 13px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    #exitoRegistro {
+      color: #5a9e85;
+      font-size: 13px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1 class="login-titulo">💰 Crear cuenta</h1>
+    <p class="login-subtitulo">Regístrate para acceder a la app</p>
+
+    <label>Usuario</label>
+    <input type="text" id="inputUsuario" placeholder="Ej: astrid" />
+
+    <label>Contraseña</label>
+    <input type="password" id="inputPassword" placeholder="••••••••" />
+
+    <label>Confirmar contraseña</label>
+    <input type="password" id="inputConfirm" placeholder="••••••••" />
+
+    <p id="errorRegistro"></p>
+    <p id="exitoRegistro"></p>
+
+    <button id="btnRegistro">Crear cuenta</button>
+
+    <p class="login-link">
+      ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
+    </p>
+  </div>
+
+  <script>
+    const API = "http://localhost:5000";
+
+    document.getElementById("btnRegistro").addEventListener("click", async () => {
+      const usuario  = document.getElementById("inputUsuario").value.trim();
+      const password = document.getElementById("inputPassword").value;
+      const confirm  = document.getElementById("inputConfirm").value;
+      const errorEl  = document.getElementById("errorRegistro");
+      const exitoEl  = document.getElementById("exitoRegistro");
+
+      errorEl.textContent = "";
+      exitoEl.textContent = "";
+
+      if (!usuario || !password || !confirm) {
+        errorEl.textContent = "Completa todos los campos.";
+        return;
+      }
+
+      if (password.length < 6) {
+        errorEl.textContent = "La contraseña debe tener al menos 6 caracteres.";
+        return;
+      }
+
+      if (password !== confirm) {
+        errorEl.textContent = "Las contraseñas no coinciden.";
+        return;
+      }
+
+      try {
+        const res  = await fetch(`${API}/registro`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ username: usuario, password })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          exitoEl.textContent = "✅ Cuenta creada. Redirigiendo...";
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 1500);
+        } else {
+          errorEl.textContent = data.error;
+        }
+      } catch (e) {
+        errorEl.textContent = "No se pudo conectar con la API.";
+      }
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("btnRegistro").click();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login · Finanzas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'DM Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #F5E9E7, #ECC5C6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 28px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    .login-titulo {
+      font-family: 'Merriweather', serif;
+      color: #837D68;
+      font-size: 28px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .login-subtitulo {
+      text-align: center;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #837D68;
+      margin-bottom: 2px;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid #C1C0C2;
+      background: #F5E9E7;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      transition: 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #8A9DB1;
+      box-shadow: 0 0 0 4px rgba(138,157,177,0.2);
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 18px;
+      background: #8A9DB1;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 4px;
+    }
+
+    button:hover {
+      background: #837D68;
+      transform: translateY(-2px);
+    }
+
+    .login-link {
+      text-align: center;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .login-link a {
+      color: #8A9DB1;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link a:hover { text-decoration: underline; }
+
+    #errorLogin {
+      color: #D46A6A;
+      font-size: 13px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1 class="login-titulo">💰 Finanzas</h1>
+    <p class="login-subtitulo">Ingresa tus credenciales</p>
+
+    <label>Usuario</label>
+    <input type="text" id="inputUsuario" placeholder="Ingrese usuario" />
+
+    <label>Contraseña</label>
+    <input type="password" id="inputPassword" placeholder="••••••••" />
+
+    <p id="errorLogin"></p>
+
+    <button id="btnLogin">Ingresar</button>
+
+    <p class="login-link">
+      ¿No tienes cuenta? <a href="registro.html">Regístrate</a>
+    </p>
+  </div>
+
+  <script>
+    const API = "http://localhost:5000";
+
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      const usuario  = document.getElementById("inputUsuario").value.trim();
+      const password = document.getElementById("inputPassword").value;
+      const errorEl  = document.getElementById("errorLogin");
+
+      if (!usuario || !password) {
+        errorEl.textContent = "Completa ambos campos.";
+        return;
+      }
+
+      try {
+        const res  = await fetch(`${API}/login`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ usuario, password })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          localStorage.setItem("token", data.token);
+          window.location.href = "index.html";
+        } else {
+          errorEl.textContent = data.error;
+        }
+      } catch (e) {
+        errorEl.textContent = "No se pudo conectar con la API.";
+      }
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("btnLogin").click();
+    });
+  </script>
+</body>
+</html>

@@ -35,9 +35,7 @@ async function cargarCategorias() {
 
     data.categorias.forEach((cat) => {
       CATEGORIAS[cat.id_categoria] = cat.tipo;
-
       const option = `<option value="${cat.id_categoria}">${cat.nombre}</option>`;
-
       selectRegistro.innerHTML += option;
       selectFiltro.innerHTML += option;
       selectEditar.innerHTML += option;
@@ -50,40 +48,27 @@ async function cargarCategorias() {
 // ── FORMATO CLP ──────────────────────────────────────
 function formatCLP(value) {
   const abs = Math.abs(value);
-
   const f = abs.toLocaleString("es-CL", {
     style: "currency",
     currency: "CLP",
     maximumFractionDigits: 0,
   });
-
   return value < 0 ? `−${f}` : f;
 }
 
 // ── TOAST ────────────────────────────────────────────
 function mostrarToast(msg, tipo = "success") {
   const t = document.getElementById("toast");
-
   t.textContent = msg;
   t.className = `toast ${tipo} show`;
-
-  setTimeout(() => {
-    t.className = "toast";
-  }, 3000);
+  setTimeout(() => { t.className = "toast"; }, 3000);
 }
 
 // ── SIGNO MONTO ──────────────────────────────────────
 function calcularMontoFinal(categoria, monto) {
   const tipo = CATEGORIAS[categoria];
-
-  if (tipo === "Gasto" && monto > 0) {
-    return monto * -1;
-  }
-
-  if (tipo === "Ingreso" && monto < 0) {
-    return Math.abs(monto);
-  }
-
+  if (tipo === "Gasto" && monto > 0) return monto * -1;
+  if (tipo === "Ingreso" && monto < 0) return Math.abs(monto);
   return monto;
 }
 
@@ -92,7 +77,6 @@ async function cargarResumen() {
   try {
     const res = await fetch(`${API}/resumen`);
     const data = await res.json();
-
     if (data.ok) {
       document.getElementById("kpiBalance").textContent = formatCLP(data.balance);
       document.getElementById("kpiIngresos").textContent = formatCLP(data.ingresos);
@@ -103,24 +87,55 @@ async function cargarResumen() {
   }
 }
 
-// ── TABS ─────────────────────────────────────────────
+// ── TABS (solo mobile) ───────────────────────────────
+function esDesktop() {
+  return window.innerWidth >= 768;
+}
+
+function mostrarTabMobile(tab) {
+  const registrar = document.getElementById("tab-registrar");
+  const historial  = document.getElementById("tab-historial");
+
+  if (tab === "registrar") {
+    registrar.classList.remove("hidden");
+    historial.classList.remove("active-mobile");
+    historial.classList.add("hidden");
+  } else {
+    registrar.classList.add("hidden");
+    historial.classList.remove("hidden");
+    historial.classList.add("active-mobile");
+    cargarHistorial();
+  }
+}
+
+function sincronizarLayout() {
+  const registrar = document.getElementById("tab-registrar");
+  const historial  = document.getElementById("tab-historial");
+
+  if (esDesktop()) {
+    // Desktop: ambos visibles siempre
+    registrar.classList.remove("hidden");
+    historial.classList.remove("hidden");
+    historial.classList.add("active-mobile");
+  } else {
+    // Mobile: solo el tab activo
+    const tabActivo = document.querySelector(".tab.active")?.dataset.tab || "registrar";
+    mostrarTabMobile(tabActivo);
+  }
+}
+
 document.querySelectorAll(".tab").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-
     btn.classList.add("active");
-
-    const target = btn.dataset.tab;
-
-    document.getElementById("tab-registrar")
-      .classList.toggle("hidden", target !== "registrar");
-
-    document.getElementById("tab-historial")
-      .classList.toggle("hidden", target !== "historial");
-
-    if (target === "historial") cargarHistorial();
+    if (!esDesktop()) {
+      mostrarTabMobile(btn.dataset.tab);
+    }
   });
 });
+
+// Reajustar layout al cambiar tamaño de ventana
+window.addEventListener("resize", sincronizarLayout);
 
 // ── HISTORIAL ────────────────────────────────────────
 async function cargarHistorial() {
@@ -128,7 +143,6 @@ async function cargarHistorial() {
   const categoria = document.getElementById("filtroCategoria").value;
 
   const params = new URLSearchParams();
-
   if (mes) params.append("mes", mes);
   if (categoria) params.append("categoria", categoria);
 
@@ -139,15 +153,11 @@ async function cargarHistorial() {
     const tbody = document.getElementById("tablaBody");
 
     if (!datM.ok || datM.movimientos.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" class="tabla-vacia">Sin movimientos</td>
-        </tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="tabla-vacia">Sin movimientos</td></tr>`;
     } else {
       tbody.innerHTML = datM.movimientos.map((m) => {
         const montoClass = m.monto >= 0 ? "monto-pos" : "monto-neg";
         const badgeClass = m.tipo === "Ingreso" ? "badge-ingreso" : "badge-gasto";
-
         const descripcionSegura = String(m.descripcion || "")
           .replace(/\\/g, "\\\\")
           .replace(/'/g, "\\'")
@@ -156,28 +166,15 @@ async function cargarHistorial() {
         return `
           <tr>
             <td>${m.fecha}</td>
-
-            <td>
-              <span class="tipo-badge ${badgeClass}">
-                ${m.categoria}
-              </span>
-            </td>
-
+            <td><span class="tipo-badge ${badgeClass}">${m.categoria}</span></td>
             <td>${m.descripcion}</td>
-
-            <td class="${montoClass}">
-              ${formatCLP(m.monto)}
-            </td>
-
+            <td class="${montoClass}">${formatCLP(m.monto)}</td>
             <td>
-              <button
-                class="btn-tabla btn-editar"
+              <button class="btn-tabla btn-editar"
                 onclick="abrirEditar(${m.id_movimiento}, '${m.fecha}', ${m.id_categoria}, '${descripcionSegura}', ${m.monto})">
                 ✏️
               </button>
-
-              <button
-                class="btn-tabla btn-eliminar"
+              <button class="btn-tabla btn-eliminar"
                 onclick="eliminar(${m.id_movimiento})">
                 🗑️
               </button>
@@ -188,22 +185,18 @@ async function cargarHistorial() {
 
     const resC = await fetch(`${API}/resumen-categorias?${params}`);
     const datC = await resC.json();
-
     renderGrafico(datC.ok ? datC.categorias : []);
+
   } catch (e) {
-    document.getElementById("tablaBody").innerHTML = `
-      <tr>
-        <td colspan="5" class="tabla-vacia">
-          No se pudo conectar con la API
-        </td>
-      </tr>`;
+    document.getElementById("tablaBody").innerHTML =
+      `<tr><td colspan="5" class="tabla-vacia">No se pudo conectar con la API</td></tr>`;
   }
 }
 
 // ── GRÁFICO ──────────────────────────────────────────
 function renderGrafico(categorias) {
   const canvas = document.getElementById("graficoGastos");
-  const empty = document.getElementById("graficoEmpty");
+  const empty  = document.getElementById("graficoEmpty");
 
   if (graficoInstance) {
     graficoInstance.destroy();
@@ -256,20 +249,14 @@ function renderGrafico(categorias) {
 }
 
 // ── FILTRAR ──────────────────────────────────────────
-document.getElementById("btnFiltrar")
-  .addEventListener("click", cargarHistorial);
+document.getElementById("btnFiltrar").addEventListener("click", cargarHistorial);
 
 // ── ELIMINAR ─────────────────────────────────────────
 async function eliminar(id) {
   if (!confirm("¿Eliminar este movimiento?")) return;
-
   try {
-    const res = await fetch(`${API}/movimientos/${id}`, {
-      method: "DELETE",
-    });
-
+    const res  = await fetch(`${API}/movimientos/${id}`, { method: "DELETE" });
     const data = await res.json();
-
     if (data.ok) {
       mostrarToast("🗑️ Movimiento eliminado");
       await cargarHistorial();
@@ -282,109 +269,90 @@ async function eliminar(id) {
   }
 }
 
-// ── ABRIR MODAL EDITAR ──────────────────────────────
+// ── ABRIR MODAL EDITAR ───────────────────────────────
 function abrirEditar(id, fecha, categoria, descripcion, monto) {
   idEditando = id;
-
-  document.getElementById("editFecha").value = fecha;
-  document.getElementById("editCategoria").value = categoria;
+  document.getElementById("editFecha").value       = fecha;
+  document.getElementById("editCategoria").value   = categoria;
   document.getElementById("editDescripcion").value = descripcion;
-  document.getElementById("editMonto").value = monto;
-
+  document.getElementById("editMonto").value       = monto;
   document.getElementById("modalOverlay").classList.remove("hidden");
 }
 
-// ── GUARDAR EDICIÓN ─────────────────────────────────
-document.getElementById("btnGuardarEdicion")
-  .addEventListener("click", async () => {
-    const categoria = document.getElementById("editCategoria").value;
+// ── GUARDAR EDICIÓN ──────────────────────────────────
+document.getElementById("btnGuardarEdicion").addEventListener("click", async () => {
+  const categoria = document.getElementById("editCategoria").value;
+  let monto = parseFloat(document.getElementById("editMonto").value);
 
-    let monto = parseFloat(document.getElementById("editMonto").value);
+  if (!categoria) { mostrarToast("Selecciona una categoría", "error"); return; }
+  if (!monto || monto === 0) { mostrarToast("Ingresa un monto válido", "error"); return; }
 
-    if (!categoria) {
-      mostrarToast("Selecciona una categoría", "error");
-      return;
-    }
+  monto = calcularMontoFinal(categoria, monto);
 
-    if (!monto || monto === 0) {
-      mostrarToast("Ingresa un monto válido", "error");
-      return;
-    }
+  const payload = {
+    fecha:       document.getElementById("editFecha").value,
+    categoria:   parseInt(categoria),
+    descripcion: document.getElementById("editDescripcion").value.trim(),
+    monto,
+  };
 
-    monto = calcularMontoFinal(categoria, monto);
+  try {
+    const res  = await fetch(`${API}/movimientos/${idEditando}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
 
-    const payload = {
-      fecha: document.getElementById("editFecha").value,
-      categoria: parseInt(categoria),
-      descripcion: document.getElementById("editDescripcion").value.trim(),
-      monto: monto,
-    };
-
-    try {
-      const res = await fetch(`${API}/movimientos/${idEditando}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (data.ok) {
-        document.getElementById("modalOverlay").classList.add("hidden");
-        mostrarToast("✅ Movimiento actualizado");
-        await cargarHistorial();
-        await cargarResumen();
-      } else {
-        mostrarToast("❌ Error: " + data.error, "error");
-      }
-    } catch (e) {
-      mostrarToast("❌ No se pudo conectar con la API", "error");
-    }
-  });
-
-// ── CERRAR MODAL ────────────────────────────────────
-document.getElementById("btnCancelarEdicion")
-  .addEventListener("click", () => {
-    document.getElementById("modalOverlay").classList.add("hidden");
-  });
-
-document.getElementById("modalOverlay")
-  .addEventListener("click", (e) => {
-    if (e.target === document.getElementById("modalOverlay")) {
+    if (data.ok) {
       document.getElementById("modalOverlay").classList.add("hidden");
-    }
-  });
-
-// ── PREVIEW CATEGORÍA ───────────────────────────────
-document.getElementById("categoria")
-  .addEventListener("change", function () {
-    const tipo = CATEGORIAS[this.value];
-    const preview = document.getElementById("tipoPreview");
-
-    if (!tipo) {
-      preview.textContent = "Selecciona una categoría para detectar el tipo";
-      preview.className = "tipo-preview";
-    } else if (tipo === "Ingreso") {
-      preview.textContent = "📈 Tipo: Ingreso";
-      preview.className = "tipo-preview tipo-ingreso";
+      mostrarToast("✅ Movimiento actualizado");
+      await cargarHistorial();
+      await cargarResumen();
     } else {
-      preview.textContent = "📉 Tipo: Gasto";
-      preview.className = "tipo-preview tipo-gasto";
+      mostrarToast("❌ Error: " + data.error, "error");
     }
+  } catch (e) {
+    mostrarToast("❌ No se pudo conectar con la API", "error");
+  }
+});
 
-    actualizarMontoPreview();
-  });
+// ── CERRAR MODAL ─────────────────────────────────────
+document.getElementById("btnCancelarEdicion").addEventListener("click", () => {
+  document.getElementById("modalOverlay").classList.add("hidden");
+});
 
-// ── PREVIEW MONTO ───────────────────────────────────
-document.getElementById("monto")
-  .addEventListener("input", actualizarMontoPreview);
+document.getElementById("modalOverlay").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("modalOverlay")) {
+    document.getElementById("modalOverlay").classList.add("hidden");
+  }
+});
+
+// ── PREVIEW CATEGORÍA ────────────────────────────────
+document.getElementById("categoria").addEventListener("change", function () {
+  const tipo    = CATEGORIAS[this.value];
+  const preview = document.getElementById("tipoPreview");
+
+  if (!tipo) {
+    preview.textContent = "Selecciona una categoría para detectar el tipo";
+    preview.className   = "tipo-preview";
+  } else if (tipo === "Ingreso") {
+    preview.textContent = "📈 Tipo: Ingreso";
+    preview.className   = "tipo-preview tipo-ingreso";
+  } else {
+    preview.textContent = "📉 Tipo: Gasto";
+    preview.className   = "tipo-preview tipo-gasto";
+  }
+
+  actualizarMontoPreview();
+});
+
+// ── PREVIEW MONTO ────────────────────────────────────
+document.getElementById("monto").addEventListener("input", actualizarMontoPreview);
 
 function actualizarMontoPreview() {
-  const preview = document.getElementById("montoPreview");
+  const preview   = document.getElementById("montoPreview");
   const categoria = document.getElementById("categoria").value;
-
   let val = parseFloat(document.getElementById("monto").value);
 
   if (!categoria || isNaN(val)) {
@@ -394,121 +362,81 @@ function actualizarMontoPreview() {
   }
 
   val = calcularMontoFinal(categoria, val);
-
   preview.textContent = `Se guardará como: ${formatCLP(val)}`;
   preview.style.color = val < 0 ? "#d46a6a" : "#5a9e85";
 }
 
-// ── GUARDAR NUEVO MOVIMIENTO ────────────────────────
-document.getElementById("financeForm")
-  .addEventListener("submit", async function (e) {
-    e.preventDefault();
+// ── GUARDAR NUEVO MOVIMIENTO ─────────────────────────
+document.getElementById("financeForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-    const btn = document.getElementById("btnGuardar");
+  const btn        = document.getElementById("btnGuardar");
+  const categoria  = document.getElementById("categoria").value;
+  const fecha      = document.getElementById("fecha").value;
+  const descripcion = document.getElementById("descripcion").value.trim();
+  let monto = parseFloat(document.getElementById("monto").value);
 
-    const categoria = document.getElementById("categoria").value;
-    const fecha = document.getElementById("fecha").value;
-    const descripcion = document.getElementById("descripcion").value.trim();
+  if (!categoria)   { mostrarToast("Selecciona una categoría", "error"); return; }
+  if (!fecha)       { mostrarToast("Selecciona una fecha", "error"); return; }
+  if (!descripcion) { mostrarToast("Ingresa una descripción", "error"); return; }
+  if (!monto || monto === 0) { mostrarToast("Ingresa un monto válido", "error"); return; }
 
-    let monto = parseFloat(document.getElementById("monto").value);
+  monto = calcularMontoFinal(categoria, monto);
 
-    if (!categoria) {
-      mostrarToast("Selecciona una categoría", "error");
-      return;
+  const payload = { fecha, categoria: parseInt(categoria), descripcion, monto };
+
+  try {
+    btn.disabled    = true;
+    btn.textContent = "Guardando...";
+
+    const res  = await fetch(`${API}/guardar`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      mostrarToast("✅ Movimiento guardado");
+      this.reset();
+      document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
+      document.getElementById("tipoPreview").textContent = "Selecciona una categoría para detectar el tipo";
+      document.getElementById("tipoPreview").className   = "tipo-preview";
+      document.getElementById("montoPreview").textContent = "Ingresa un monto para previsualizarlo";
+      document.getElementById("montoPreview").style.color = "#837D68";
+      await cargarResumen();
+    } else {
+      mostrarToast("❌ Error: " + data.error, "error");
     }
+  } catch (err) {
+    mostrarToast("❌ No se pudo conectar con la API", "error");
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = "Guardar movimiento";
+  }
+});
 
-    if (!fecha) {
-      mostrarToast("Selecciona una fecha", "error");
-      return;
-    }
+// ── LIMPIAR FORMULARIO ───────────────────────────────
+document.getElementById("btnLimpiar").addEventListener("click", function () {
+  document.getElementById("financeForm").reset();
+  document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
+  document.getElementById("tipoPreview").textContent = "Selecciona una categoría para detectar el tipo";
+  document.getElementById("tipoPreview").className   = "tipo-preview";
+  document.getElementById("montoPreview").textContent = "Ingresa un monto para previsualizarlo";
+  document.getElementById("montoPreview").style.color = "#837D68";
+});
 
-    if (!descripcion) {
-      mostrarToast("Ingresa una descripción", "error");
-      return;
-    }
+// ── LOGOUT ───────────────────────────────────────────
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
+}
 
-    if (!monto || monto === 0) {
-      mostrarToast("Ingresa un monto válido", "error");
-      return;
-    }
-
-    monto = calcularMontoFinal(categoria, monto);
-
-    const payload = {
-      fecha: fecha,
-      categoria: parseInt(categoria),
-      descripcion: descripcion,
-      monto: monto,
-    };
-
-    try {
-      btn.disabled = true;
-      btn.textContent = "Guardando...";
-
-      const res = await fetch(`${API}/guardar`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (data.ok) {
-        mostrarToast("✅ Movimiento guardado");
-
-        this.reset();
-
-        document.getElementById("fecha").value =
-          new Date().toISOString().split("T")[0];
-
-        document.getElementById("tipoPreview").textContent =
-          "Selecciona una categoría para detectar el tipo";
-
-        document.getElementById("tipoPreview").className = "tipo-preview";
-
-        document.getElementById("montoPreview").textContent =
-          "Ingresa un monto para previsualizarlo";
-
-        document.getElementById("montoPreview").style.color = "#837D68";
-
-        await cargarResumen();
-      } else {
-        mostrarToast("❌ Error: " + data.error, "error");
-      }
-    } catch (err) {
-      mostrarToast("❌ No se pudo conectar con la API", "error");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Guardar movimiento";
-    }
-  });
-
-// ── LIMPIAR FORMULARIO ──────────────────────────────
-document.getElementById("btnLimpiar")
-  .addEventListener("click", function () {
-    document.getElementById("financeForm").reset();
-
-    document.getElementById("fecha").value =
-      new Date().toISOString().split("T")[0];
-
-    document.getElementById("tipoPreview").textContent =
-      "Selecciona una categoría para detectar el tipo";
-
-    document.getElementById("tipoPreview").className = "tipo-preview";
-
-    document.getElementById("montoPreview").textContent =
-      "Ingresa un monto para previsualizarlo";
-
-    document.getElementById("montoPreview").style.color = "#837D68";
-  });
-
-// ── INIT ────────────────────────────────────────────
+// ── INIT ─────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", async () => {
-  document.getElementById("fecha").value =
-    new Date().toISOString().split("T")[0];
-
+  document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
   await cargarCategorias();
   await cargarResumen();
+  sincronizarLayout();      // aplica layout correcto según pantalla
+  cargarHistorial();        // carga historial al inicio (visible en desktop)
 });
