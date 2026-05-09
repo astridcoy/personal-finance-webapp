@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Finance App</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css" />
+
+</head>
+<body>
+  <main class="app-container">
+
+    <!-- ── KPI CARDS ── -->
+    <section class="kpi-grid">
+      <div class="kpi-card kpi-balance">
+        <span class="kpi-icon">💰</span>
+        <span class="kpi-label">Balance</span>
+        <span class="kpi-value" id="kpiBalance">—</span>
+      </div>
+      <div class="kpi-card kpi-ingresos">
+        <span class="kpi-icon">📈</span>
+        <span class="kpi-label">Ingresos</span>
+        <span class="kpi-value" id="kpiIngresos">—</span>
+      </div>
+      <div class="kpi-card kpi-gastos">
+        <span class="kpi-icon">📉</span>
+        <span class="kpi-label">Gastos</span>
+        <span class="kpi-value" id="kpiGastos">—</span>
+      </div>
+    </section>
+
+    <!-- ── TABS ── -->
+    <div class="tabs">
+      <button class="tab active" data-tab="registrar">✏️ Registrar</button>
+      <button class="tab" data-tab="historial">📋 Historial</button>
+    </div>
+
+    <!-- ── PESTAÑA: REGISTRAR ── -->
+    <section class="card" id="tab-registrar">
+      <form id="financeForm">
+        <label for="fecha">Fecha</label>
+        <input type="date" id="fecha" required />
+
+        <label for="categoria">Categoría</label>
+        <select id="categoria" required>
+          <option value="">Selecciona una categoría</option>
+          <option value="1">Sueldo</option>
+          <option value="2">Freelance</option>
+          <option value="3">Arriendo</option>
+          <option value="4">Tarjeta Crédito</option>
+          <option value="5">Comida</option>
+          <option value="6">Transporte</option>
+          <option value="7">WOM</option>
+          <option value="8">Salud</option>
+          <option value="9">Otros</option>
+        </select>
+
+        <div id="tipoPreview" class="tipo-preview">
+          Selecciona una categoría para detectar el tipo
+        </div>
+
+        <label for="descripcion">Descripción</label>
+        <input type="text" id="descripcion" placeholder="Ej: Almuerzo, sueldo, WOM..." required />
+
+        <label for="monto">Monto</label>
+        <input type="number" id="monto" placeholder="Ej: -8500 o 800000" required />
+        <div id="montoPreview" class="monto-preview">Ingresa un monto para previsualizarlo</div>
+
+        <button type="submit" id="btnGuardar">Guardar movimiento</button>
+        <button type="button" id="btnLimpiar" class="btn-secondary">Limpiar formulario</button>
+      </form>
+    </section>
+
+    <!-- ── PESTAÑA: HISTORIAL ── -->
+    <section class="card hidden" id="tab-historial">
+
+      <!-- Filtros -->
+      <div class="filtros">
+        <div class="filtro-group">
+          <label for="filtroMes">Mes</label>
+          <input type="month" id="filtroMes" />
+        </div>
+        <div class="filtro-group">
+          <label for="filtroCategoria">Categoría</label>
+          <select id="filtroCategoria">
+
+          </select>
+        </div>
+        <button id="btnFiltrar" class="btn-filtrar">Filtrar</button>
+      </div>
+
+      <!-- Gráfico de dona -->
+      <div class="grafico-container">
+        <p class="grafico-titulo">Gastos por categoría</p>
+        <canvas id="graficoGastos"></canvas>
+        <p id="graficoEmpty" class="grafico-empty hidden">Sin datos de gastos</p>
+      </div>
+
+      <!-- Tabla historial -->
+      <div class="tabla-container">
+        <table id="tablaMovimientos">
+          <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Categoría</th>
+                <th>Descripción</th>
+                <th>Monto</th>
+                <th>Acciones</th>
+              </tr>
+          </thead>
+          <tbody id="tablaBody">
+            <tr><td colspan="5" class="tabla-vacia">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <!-- ── MODAL EDITAR ── -->
+<div id="modalOverlay" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h2 class="modal-titulo">✏️ Editar movimiento</h2>
+
+    <label>Fecha</label>
+    <input type="date" id="editFecha" />
+
+    <label>Categoría</label>
+    <select id="editCategoria">
+  
+    </select>
+
+    <label>Descripción</label>
+    <input type="text" id="editDescripcion" />
+
+    <label>Monto</label>
+    <input type="number" id="editMonto" />
+
+    <button id="btnGuardarEdicion">Guardar cambios</button>
+    <button id="btnCancelarEdicion" class="btn-secondary">Cancelar</button>
+  </div>
+</div>
+
+
+    <div id="toast" class="toast"></div>
+  </main>
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
