@@ -4,16 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Personal Finance App</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mis Finanzas">
 </head>
 <body>
 
 <nav class="navbar">
   <span class="navbar-titulo">💰 Mis Finanzas</span>
-  <button id="btnLogout" onclick="logout()">Cerrar sesión</button>
+  <div class="navbar-actions">
+    <button id="btnDark" onclick="toggleDark()">🌙</button>
+    <button id="btnLogout" onclick="logout()">Cerrar sesión</button>
+  </div>
 </nav>
 
 <main class="app-container">
@@ -56,15 +61,6 @@
         <label for="categoria">Categoría</label>
         <select id="categoria" required>
           <option value="">Selecciona una categoría</option>
-          <option value="1">Sueldo</option>
-          <option value="2">Freelance</option>
-          <option value="3">Arriendo</option>
-          <option value="4">Tarjeta Crédito</option>
-          <option value="5">Comida</option>
-          <option value="6">Transporte</option>
-          <option value="7">WOM</option>
-          <option value="8">Salud</option>
-          <option value="9">Otros</option>
         </select>
 
         <div id="tipoPreview" class="tipo-preview">
@@ -90,7 +86,7 @@
       <div class="filtros">
         <div class="filtro-group">
           <label for="filtroMes">Mes</label>
-          <input type="datetime" id="filtroMes" />
+          <input type="date" id="filtroMes" placeholder="Selecciona una fecha" />
         </div>
         <div class="filtro-group">
           <label for="filtroCategoria">Categoría</label>
@@ -123,7 +119,7 @@
       </div>
     </section>
 
-  </div><!-- /contenido-principal -->
+  </div>
 
   <!-- ── MODAL EDITAR ── -->
   <div id="modalOverlay" class="modal-overlay hidden">
@@ -134,17 +130,7 @@
       <input type="date" id="editFecha" />
 
       <label>Categoría</label>
-      <select id="editCategoria">
-        <option value="1">Sueldo</option>
-        <option value="2">Freelance</option>
-        <option value="3">Arriendo</option>
-        <option value="4">Tarjeta Crédito</option>
-        <option value="5">Comida</option>
-        <option value="6">Transporte</option>
-        <option value="7">WOM</option>
-        <option value="8">Salud</option>
-        <option value="9">Otros</option>
-      </select>
+      <select id="editCategoria"></select>
 
       <label>Descripción</label>
       <input type="text" id="editDescripcion" />

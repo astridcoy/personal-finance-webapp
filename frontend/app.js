@@ -1,35 +1,28 @@
-const API = "http://localhost:5000";
+const API = "http://192.168.1.94:5000";
 
 let CATEGORIAS = {};
 let graficoInstance = null;
 let idEditando = null;
 
 const COLORES = [
-  "#8A9DB1",
-  "#ECC5C6",
-  "#837D68",
-  "#C1C0C2",
-  "#7ab59e",
-  "#d46a6a",
-  "#b5a77a",
-  "#9db18a",
+  "#8A9DB1", "#ECC5C6", "#837D68", "#C1C0C2",
+  "#7ab59e", "#d46a6a", "#b5a77a", "#9db18a",
 ];
 
 // ── CATEGORÍAS DINÁMICAS ─────────────────────────────
 async function cargarCategorias() {
   try {
-    const res = await fetch(`${API}/categorias`);
+    const res  = await fetch(`${API}/categorias`);
     const data = await res.json();
-
     if (!data.ok) return;
 
     const selectRegistro = document.getElementById("categoria");
-    const selectFiltro = document.getElementById("filtroCategoria");
-    const selectEditar = document.getElementById("editCategoria");
+    const selectFiltro   = document.getElementById("filtroCategoria");
+    const selectEditar   = document.getElementById("editCategoria");
 
     selectRegistro.innerHTML = `<option value="">Selecciona una categoría</option>`;
-    selectFiltro.innerHTML = `<option value="">Todas</option>`;
-    selectEditar.innerHTML = "";
+    selectFiltro.innerHTML   = `<option value="">Todas</option>`;
+    selectEditar.innerHTML   = "";
 
     CATEGORIAS = {};
 
@@ -37,8 +30,8 @@ async function cargarCategorias() {
       CATEGORIAS[cat.id_categoria] = cat.tipo;
       const option = `<option value="${cat.id_categoria}">${cat.nombre}</option>`;
       selectRegistro.innerHTML += option;
-      selectFiltro.innerHTML += option;
-      selectEditar.innerHTML += option;
+      selectFiltro.innerHTML   += option;
+      selectEditar.innerHTML   += option;
     });
   } catch (e) {
     console.error("No se pudieron cargar categorías", e);
@@ -67,7 +60,7 @@ function mostrarToast(msg, tipo = "success") {
 // ── SIGNO MONTO ──────────────────────────────────────
 function calcularMontoFinal(categoria, monto) {
   const tipo = CATEGORIAS[categoria];
-  if (tipo === "Gasto" && monto > 0) return monto * -1;
+  if (tipo === "Gasto"   && monto > 0) return monto * -1;
   if (tipo === "Ingreso" && monto < 0) return Math.abs(monto);
   return monto;
 }
@@ -75,12 +68,12 @@ function calcularMontoFinal(categoria, monto) {
 // ── RESUMEN KPIS ─────────────────────────────────────
 async function cargarResumen() {
   try {
-    const res = await fetch(`${API}/resumen`);
+    const res  = await fetch(`${API}/resumen`);
     const data = await res.json();
     if (data.ok) {
-      document.getElementById("kpiBalance").textContent = formatCLP(data.balance);
+      document.getElementById("kpiBalance").textContent  = formatCLP(data.balance);
       document.getElementById("kpiIngresos").textContent = formatCLP(data.ingresos);
-      document.getElementById("kpiGastos").textContent = formatCLP(data.gastos);
+      document.getElementById("kpiGastos").textContent   = formatCLP(data.gastos);
     }
   } catch (e) {
     console.warn("Sin conexión a API:", e.message);
@@ -94,7 +87,7 @@ function esDesktop() {
 
 function mostrarTabMobile(tab) {
   const registrar = document.getElementById("tab-registrar");
-  const historial  = document.getElementById("tab-historial");
+  const historial = document.getElementById("tab-historial");
 
   if (tab === "registrar") {
     registrar.classList.remove("hidden");
@@ -110,15 +103,13 @@ function mostrarTabMobile(tab) {
 
 function sincronizarLayout() {
   const registrar = document.getElementById("tab-registrar");
-  const historial  = document.getElementById("tab-historial");
+  const historial = document.getElementById("tab-historial");
 
   if (esDesktop()) {
-    // Desktop: ambos visibles siempre
     registrar.classList.remove("hidden");
     historial.classList.remove("hidden");
     historial.classList.add("active-mobile");
   } else {
-    // Mobile: solo el tab activo
     const tabActivo = document.querySelector(".tab.active")?.dataset.tab || "registrar";
     mostrarTabMobile(tabActivo);
   }
@@ -128,28 +119,25 @@ document.querySelectorAll(".tab").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
     btn.classList.add("active");
-    if (!esDesktop()) {
-      mostrarTabMobile(btn.dataset.tab);
-    }
+    if (!esDesktop()) mostrarTabMobile(btn.dataset.tab);
   });
 });
 
-// Reajustar layout al cambiar tamaño de ventana
 window.addEventListener("resize", sincronizarLayout);
 
 // ── HISTORIAL ────────────────────────────────────────
 async function cargarHistorial() {
-  const mes = document.getElementById("filtroMes").value;
-  const categoria = document.getElementById("filtroCategoria").value;
+  const fechaFiltro = document.getElementById("filtroMes").value;
+  const mes         = fechaFiltro ? fechaFiltro.substring(0, 7) : "";
+  const categoria   = document.getElementById("filtroCategoria").value;
 
   const params = new URLSearchParams();
-  if (mes) params.append("mes", mes);
+  if (mes)       params.append("mes", mes);
   if (categoria) params.append("categoria", categoria);
 
   try {
     const resM = await fetch(`${API}/movimientos?${params}`);
     const datM = await resM.json();
-
     const tbody = document.getElementById("tablaBody");
 
     if (!datM.ok || datM.movimientos.length === 0) {
@@ -198,10 +186,7 @@ function renderGrafico(categorias) {
   const canvas = document.getElementById("graficoGastos");
   const empty  = document.getElementById("graficoEmpty");
 
-  if (graficoInstance) {
-    graficoInstance.destroy();
-    graficoInstance = null;
-  }
+  if (graficoInstance) { graficoInstance.destroy(); graficoInstance = null; }
 
   if (!categorias || categorias.length === 0) {
     canvas.classList.add("hidden");
@@ -231,17 +216,10 @@ function renderGrafico(categorias) {
       plugins: {
         legend: {
           position: "bottom",
-          labels: {
-            font: { size: 11 },
-            color: "#837D68",
-            boxWidth: 12,
-            padding: 10,
-          },
+          labels: { font: { size: 11 }, color: "#837D68", boxWidth: 12, padding: 10 },
         },
         tooltip: {
-          callbacks: {
-            label: (ctx) => ` ${formatCLP(-ctx.parsed)}`,
-          },
+          callbacks: { label: (ctx) => ` ${formatCLP(-ctx.parsed)}` },
         },
       },
     },
@@ -303,7 +281,6 @@ document.getElementById("btnGuardarEdicion").addEventListener("click", async () 
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-
     if (data.ok) {
       document.getElementById("modalOverlay").classList.add("hidden");
       mostrarToast("✅ Movimiento actualizado");
@@ -343,7 +320,6 @@ document.getElementById("categoria").addEventListener("change", function () {
     preview.textContent = "📉 Tipo: Gasto";
     preview.className   = "tipo-preview tipo-gasto";
   }
-
   actualizarMontoPreview();
 });
 
@@ -357,7 +333,7 @@ function actualizarMontoPreview() {
 
   if (!categoria || isNaN(val)) {
     preview.textContent = "Ingresa un monto para previsualizarlo";
-    preview.style.color = "#837D68";
+    preview.style.color = "";
     return;
   }
 
@@ -370,9 +346,9 @@ function actualizarMontoPreview() {
 document.getElementById("financeForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
-  const btn        = document.getElementById("btnGuardar");
-  const categoria  = document.getElementById("categoria").value;
-  const fecha      = document.getElementById("fecha").value;
+  const btn         = document.getElementById("btnGuardar");
+  const categoria   = document.getElementById("categoria").value;
+  const fecha       = document.getElementById("fecha").value;
   const descripcion = document.getElementById("descripcion").value.trim();
   let monto = parseFloat(document.getElementById("monto").value);
 
@@ -399,12 +375,13 @@ document.getElementById("financeForm").addEventListener("submit", async function
     if (data.ok) {
       mostrarToast("✅ Movimiento guardado");
       this.reset();
-      document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
-      document.getElementById("tipoPreview").textContent = "Selecciona una categoría para detectar el tipo";
-      document.getElementById("tipoPreview").className   = "tipo-preview";
+      document.getElementById("fecha").value          = new Date().toISOString().split("T")[0];
+      document.getElementById("tipoPreview").textContent  = "Selecciona una categoría para detectar el tipo";
+      document.getElementById("tipoPreview").className    = "tipo-preview";
       document.getElementById("montoPreview").textContent = "Ingresa un monto para previsualizarlo";
-      document.getElementById("montoPreview").style.color = "#837D68";
+      document.getElementById("montoPreview").style.color = "";
       await cargarResumen();
+      if (esDesktop()) await cargarHistorial();
     } else {
       mostrarToast("❌ Error: " + data.error, "error");
     }
@@ -419,11 +396,11 @@ document.getElementById("financeForm").addEventListener("submit", async function
 // ── LIMPIAR FORMULARIO ───────────────────────────────
 document.getElementById("btnLimpiar").addEventListener("click", function () {
   document.getElementById("financeForm").reset();
-  document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
-  document.getElementById("tipoPreview").textContent = "Selecciona una categoría para detectar el tipo";
-  document.getElementById("tipoPreview").className   = "tipo-preview";
+  document.getElementById("fecha").value          = new Date().toISOString().split("T")[0];
+  document.getElementById("tipoPreview").textContent  = "Selecciona una categoría para detectar el tipo";
+  document.getElementById("tipoPreview").className    = "tipo-preview";
   document.getElementById("montoPreview").textContent = "Ingresa un monto para previsualizarlo";
-  document.getElementById("montoPreview").style.color = "#837D68";
+  document.getElementById("montoPreview").style.color = "";
 });
 
 // ── LOGOUT ───────────────────────────────────────────
@@ -432,11 +409,26 @@ function logout() {
   window.location.href = "login.html";
 }
 
+// ── MODO OSCURO ──────────────────────────────────────
+function toggleDark() {
+  const isDark = document.body.classList.toggle("dark");
+  localStorage.setItem("darkMode", isDark ? "1" : "0");
+  document.getElementById("btnDark").textContent = isDark ? "☀️" : "🌙";
+}
+
+(function () {
+  if (localStorage.getItem("darkMode") === "1") {
+    document.body.classList.add("dark");
+    const btn = document.getElementById("btnDark");
+    if (btn) btn.textContent = "☀️";
+  }
+})();
+
 // ── INIT ─────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
   await cargarCategorias();
   await cargarResumen();
-  sincronizarLayout();      // aplica layout correcto según pantalla
-  cargarHistorial();        // carga historial al inicio (visible en desktop)
+  sincronizarLayout();
+  cargarHistorial();
 });
