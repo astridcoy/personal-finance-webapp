@@ -1,4 +1,4 @@
-const API = "http://192.168.1.94:5000";
+const API = "http://192.168.1.19:5000";
 
 let CATEGORIAS = {};
 let graficoInstance = null;
@@ -9,12 +9,31 @@ const COLORES = [
   "#7ab59e", "#d46a6a", "#b5a77a", "#9db18a",
 ];
 
+// ── AUTH HEADER ──────────────────────────────────────
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  };
+}
+
+// Si el token expiró o es inválido, redirige al login
+function manejarRespuesta(res) {
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    window.location.href = "login.html";
+    return null;
+  }
+  return res.json();
+}
+
 // ── CATEGORÍAS DINÁMICAS ─────────────────────────────
 async function cargarCategorias() {
   try {
-    const res  = await fetch(`${API}/categorias`);
-    const data = await res.json();
-    if (!data.ok) return;
+    const res  = await fetch(`${API}/categorias`, { headers: authHeaders() });
+    const data = await manejarRespuesta(res);
+    if (!data || !data.ok) return;
 
     const selectRegistro = document.getElementById("categoria");
     const selectFiltro   = document.getElementById("filtroCategoria");
@@ -68,9 +87,9 @@ function calcularMontoFinal(categoria, monto) {
 // ── RESUMEN KPIS ─────────────────────────────────────
 async function cargarResumen() {
   try {
-    const res  = await fetch(`${API}/resumen`);
-    const data = await res.json();
-    if (data.ok) {
+    const res  = await fetch(`${API}/resumen`, { headers: authHeaders() });
+    const data = await manejarRespuesta(res);
+    if (data && data.ok) {
       document.getElementById("kpiBalance").textContent  = formatCLP(data.balance);
       document.getElementById("kpiIngresos").textContent = formatCLP(data.ingresos);
       document.getElementById("kpiGastos").textContent   = formatCLP(data.gastos);
@@ -136,11 +155,11 @@ async function cargarHistorial() {
   if (categoria) params.append("categoria", categoria);
 
   try {
-    const resM = await fetch(`${API}/movimientos?${params}`);
-    const datM = await resM.json();
+    const resM = await fetch(`${API}/movimientos?${params}`, { headers: authHeaders() });
+    const datM = await manejarRespuesta(resM);
     const tbody = document.getElementById("tablaBody");
 
-    if (!datM.ok || datM.movimientos.length === 0) {
+    if (!datM || !datM.ok || datM.movimientos.length === 0) {
       tbody.innerHTML = `<tr><td colspan="5" class="tabla-vacia">Sin movimientos</td></tr>`;
     } else {
       tbody.innerHTML = datM.movimientos.map((m) => {
@@ -171,9 +190,9 @@ async function cargarHistorial() {
       }).join("");
     }
 
-    const resC = await fetch(`${API}/resumen-categorias?${params}`);
-    const datC = await resC.json();
-    renderGrafico(datC.ok ? datC.categorias : []);
+    const resC = await fetch(`${API}/resumen-categorias?${params}`, { headers: authHeaders() });
+    const datC = await manejarRespuesta(resC);
+    renderGrafico(datC && datC.ok ? datC.categorias : []);
 
   } catch (e) {
     document.getElementById("tablaBody").innerHTML =
@@ -233,13 +252,16 @@ document.getElementById("btnFiltrar").addEventListener("click", cargarHistorial)
 async function eliminar(id) {
   if (!confirm("¿Eliminar este movimiento?")) return;
   try {
-    const res  = await fetch(`${API}/movimientos/${id}`, { method: "DELETE" });
-    const data = await res.json();
-    if (data.ok) {
+    const res  = await fetch(`${API}/movimientos/${id}`, {
+      method: "DELETE",
+      headers: authHeaders()
+    });
+    const data = await manejarRespuesta(res);
+    if (data && data.ok) {
       mostrarToast("🗑️ Movimiento eliminado");
       await cargarHistorial();
       await cargarResumen();
-    } else {
+    } else if (data) {
       mostrarToast("❌ Error: " + data.error, "error");
     }
   } catch (e) {
@@ -277,16 +299,16 @@ document.getElementById("btnGuardarEdicion").addEventListener("click", async () 
   try {
     const res  = await fetch(`${API}/movimientos/${idEditando}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
-    if (data.ok) {
+    const data = await manejarRespuesta(res);
+    if (data && data.ok) {
       document.getElementById("modalOverlay").classList.add("hidden");
       mostrarToast("✅ Movimiento actualizado");
       await cargarHistorial();
       await cargarResumen();
-    } else {
+    } else if (data) {
       mostrarToast("❌ Error: " + data.error, "error");
     }
   } catch (e) {
@@ -367,22 +389,22 @@ document.getElementById("financeForm").addEventListener("submit", async function
 
     const res  = await fetch(`${API}/guardar`, {
       method:  "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body:    JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await manejarRespuesta(res);
 
-    if (data.ok) {
+    if (data && data.ok) {
       mostrarToast("✅ Movimiento guardado");
       this.reset();
-      document.getElementById("fecha").value          = new Date().toISOString().split("T")[0];
+      document.getElementById("fecha").value              = new Date().toISOString().split("T")[0];
       document.getElementById("tipoPreview").textContent  = "Selecciona una categoría para detectar el tipo";
       document.getElementById("tipoPreview").className    = "tipo-preview";
       document.getElementById("montoPreview").textContent = "Ingresa un monto para previsualizarlo";
       document.getElementById("montoPreview").style.color = "";
       await cargarResumen();
       if (esDesktop()) await cargarHistorial();
-    } else {
+    } else if (data) {
       mostrarToast("❌ Error: " + data.error, "error");
     }
   } catch (err) {
@@ -396,7 +418,7 @@ document.getElementById("financeForm").addEventListener("submit", async function
 // ── LIMPIAR FORMULARIO ───────────────────────────────
 document.getElementById("btnLimpiar").addEventListener("click", function () {
   document.getElementById("financeForm").reset();
-  document.getElementById("fecha").value          = new Date().toISOString().split("T")[0];
+  document.getElementById("fecha").value              = new Date().toISOString().split("T")[0];
   document.getElementById("tipoPreview").textContent  = "Selecciona una categoría para detectar el tipo";
   document.getElementById("tipoPreview").className    = "tipo-preview";
   document.getElementById("montoPreview").textContent = "Ingresa un monto para previsualizarlo";

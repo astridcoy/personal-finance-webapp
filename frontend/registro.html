@@ -92,10 +92,8 @@
       margin-top: 4px;
     }
 
-    button:hover {
-      background: #837D68;
-      transform: translateY(-2px);
-    }
+    button:hover { background: #837D68; transform: translateY(-2px); }
+    button:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
     .login-link {
       text-align: center;
@@ -156,9 +154,10 @@
   </div>
 
   <script>
-    const API = "http://192.168.1.94:5000";
+    const API = "http://192.168.1.19:5000";
 
     document.getElementById("btnRegistro").addEventListener("click", async () => {
+      const btn      = document.getElementById("btnRegistro");
       const usuario  = document.getElementById("inputUsuario").value.trim();
       const password = document.getElementById("inputPassword").value;
       const confirm  = document.getElementById("inputConfirm").value;
@@ -184,6 +183,9 @@
       }
 
       try {
+        btn.disabled    = true;
+        btn.textContent = "Creando cuenta...";
+
         const res  = await fetch(`${API}/registro`, {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
@@ -201,6 +203,9 @@
         }
       } catch (e) {
         errorEl.textContent = "No se pudo conectar con la API.";
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = "Crear cuenta";
       }
     });
 

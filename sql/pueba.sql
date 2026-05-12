@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM movimientos WHERE id_usuario = 1;
