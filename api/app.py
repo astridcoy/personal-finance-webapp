@@ -7,7 +7,11 @@ import datetime
 from functools import wraps
 
 app = Flask(__name__)
-CORS(app)
+
+# CORS abierto para todos los orígenes y métodos.
+# Esto permite que el frontend funcione desde cualquier IP,
+# puerto o dispositivo de la red sin errores de bloqueo.
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=False)
 
 SECRET_KEY = "finanzas-secret-key-2024"
 
@@ -101,7 +105,6 @@ def login():
         if not bcrypt.checkpw(password.encode("utf-8"), password_hash):
             return jsonify({"ok": False, "error": "Usuario o contraseña incorrectos"}), 401
 
-        # Generar JWT con expiración de 8 horas
         token = jwt.encode(
             {
                 "usuario_id": usuario_id,
@@ -268,7 +271,6 @@ def eliminar_movimiento(id):
         uid    = request.usuario_id
         cn     = conectar_sql()
         cursor = cn.cursor()
-        # Solo elimina si el movimiento pertenece al usuario
         cursor.execute(
             "DELETE FROM movimientos WHERE id_movimiento = ? AND id_usuario = ?", id, uid
         )

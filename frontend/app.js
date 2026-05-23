@@ -1,4 +1,8 @@
-const API = "http://192.168.1.19:5000";
+// ── URL DE LA API: se detecta automáticamente desde el host actual ───────────
+// Esto permite que la app funcione desde cualquier IP o dominio sin tocar el código.
+// Ej: si accedes desde http://192.168.1.50, la API apunta a http://192.168.1.50:5000
+// Ej: si accedes desde http://localhost, la API apunta a http://localhost:5000
+const API = `${window.location.protocol}//${window.location.hostname}:5000`;
 
 let CATEGORIAS = {};
 let graficoInstance = null;

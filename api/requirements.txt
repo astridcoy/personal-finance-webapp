@@ -1,3 +1,6 @@
 flask
 flask-cors
 pyodbc
+PyJWT
+bcrypt
+gunicorn
