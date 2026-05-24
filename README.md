@@ -1,61 +1,61 @@
-# 💖 Personal Finance Web App
+# Personal Finance Web App
 
 Aplicación web responsive para gestión de finanzas personales, desarrollada con:
 
-- HTML
-- CSS
-- JavaScript
-- Flask
-- SQL Server
-- Power BI
+* HTML
+* CSS
+* JavaScript
+* Flask
+* SQL Server
+* Power BI
 
 ---
 
-# 🇪🇸 Español
+# Español
 
-## ✨ Características
+## Características
 
-✅ Registro de ingresos y gastos  
-✅ Cálculo automático de balance  
-✅ Categorías dinámicas desde SQL Server  
-✅ Dashboard financiero integrado  
-✅ KPIs financieros  
-✅ Historial de movimientos  
-✅ Filtros por mes y categoría  
-✅ Gráfico de gastos  
-✅ CRUD completo (crear, editar y eliminar)  
-✅ Diseño responsive mobile-first  
-✅ Integración con Power BI  
+* Registro de ingresos y gastos
+* Cálculo automático de balance
+* Categorías dinámicas desde SQL Server
+* Dashboard financiero integrado
+* KPIs financieros
+* Historial de movimientos
+* Filtros por mes y categoría
+* Gráfico de gastos
+* CRUD completo (crear, editar y eliminar)
+* Diseño responsive mobile-first
+* Integración con Power BI
 
 ---
 
-## 🛠 Stack Tecnológico
+## Stack Tecnológico
 
 ### Frontend
 
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Chart.js
+* HTML5
+* CSS3
+* Vanilla JavaScript
+* Chart.js
 
 ### Backend
 
-- Python
-- Flask
-- Flask-CORS
-- pyodbc
+* Python
+* Flask
+* Flask-CORS
+* pyodbc
 
 ### Base de Datos
 
-- SQL Server Express
+* SQL Server Express
 
 ### BI
 
-- Power BI
+* Power BI
 
 ---
 
-## 🧠 Arquitectura
+## Arquitectura
 
 ```text
 Frontend Web App
@@ -69,7 +69,7 @@ Power BI Dashboard
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 ### Web App
 
@@ -77,7 +77,7 @@ Power BI Dashboard
 
 ---
 
-## 🚀 Cómo ejecutar
+## Cómo ejecutar
 
 ### 1. Clonar repositorio
 
@@ -110,51 +110,51 @@ o usar Live Server en VS Code.
 
 ---
 
-# 🇺🇸 English
+# English
 
-## ✨ Features
+## Features
 
-✅ Income & expense tracking  
-✅ Automatic balance calculation  
-✅ Dynamic categories from SQL Server  
-✅ Integrated finance dashboard  
-✅ Financial KPI cards  
-✅ Transaction history  
-✅ Filters by month and category  
-✅ Expense donut chart  
-✅ Full CRUD operations  
-✅ Responsive mobile-first UI  
-✅ Power BI integration  
+* Income & expense tracking
+* Automatic balance calculation
+* Dynamic categories from SQL Server
+* Integrated finance dashboard
+* Financial KPI cards
+* Transaction history
+* Filters by month and category
+* Expense donut chart
+* Full CRUD operations
+* Responsive mobile-first UI
+* Power BI integration
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Chart.js
+* HTML5
+* CSS3
+* Vanilla JavaScript
+* Chart.js
 
 ### Backend
 
-- Python
-- Flask
-- Flask-CORS
-- pyodbc
+* Python
+* Flask
+* Flask-CORS
+* pyodbc
 
 ### Database
 
-- SQL Server Express
+* SQL Server Express
 
 ### BI
 
-- Power BI
+* Power BI
 
 ---
 
-## 🧠 Architecture
+## Architecture
 
 ```text
 Frontend Web App
@@ -168,7 +168,7 @@ Power BI Dashboard
 
 ---
 
-## 🚀 Run locally
+## Run locally
 
 ### 1. Clone repository
 
@@ -201,6 +201,4 @@ or use Live Server in VS Code.
 
 ---
 
-# 💖 Author
 
-Developed by Astrid Coy.
